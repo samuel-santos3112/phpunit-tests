@@ -1,0 +1,47 @@
+
+version: '3'
+services:
+  # Container do apache
+  apache:
+    # Apontando o arquivo de configuraçao do container do PHP
+    build: .docker/apache
+    container_name: apache
+    # Apontando a porta 80 do container para a porta 80 da nossa máquina
+    ports:
+      - 80:80
+    # "Injetando diretórios" no container
+    volumes:
+      - .:/var/www
+      - .docker/config/vhosts:/etc/apache2/sites-enabled
+      - .docker/logs/apache:/var/log/apache2/
+    # Indicando pro docker-compose que o container do PHP deve ser inicializado antes desse container
+    depends_on:
+      - php
+  # Container do Mysql
+  mysql:
+    # Definindo a versão do Mysql
+    image: mysql
+    command: "--default-authentication-plugin=mysql_native_password"
+    container_name: mysql
+    # "Injetando diretórios" no container
+    volumes:
+      - .docker/data/db:/var/lib/mysql
+    # Define os usuários e senhas
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: db_query
+      MYSQL_USER: mysql
+      MYSQL_PASSWORD: root
+    # Apontando a porta 3306 do container para a porta 3306 da nossa máquina
+    ports:
+      - 3306:3306
+  php:
+    # Apontando o arquivo de configuraçao do container do PHP
+    build: .docker/php
+    container_name: php
+    # "Injetando diretórios" no container
+    volumes:
+      - .:/var/www
+    # Indicando pro docker-compose que o container do mysql deve ser inicializado antes desse container
+    depends_on:
+      - mysql
